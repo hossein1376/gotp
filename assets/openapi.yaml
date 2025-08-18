@@ -1,0 +1,298 @@
+info:
+  title: APIFiddle Sample Definition
+  version: 0.0.0
+  description: Example workspace
+tags:
+  - name: login
+  - name: user
+paths:
+  /api/v1/login:
+    post:
+      tags:
+        - login
+      summary: Login via OTP
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                title: LoginViaOtpCreated
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+          description: The request was successful, and a new resource was created.
+        "400":
+          $ref: "#/components/responses/Bad Request"
+        "404":
+          $ref: "#/components/responses/Not Found"
+        "429":
+          $ref: "#/components/responses/Too Many Requests"
+      parameters: []
+      description: Login by providing the OTP
+      operationId: loginViaOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - code
+              properties:
+                code:
+                  type: string
+                phone:
+                  type: string
+        required: true
+        description: ""
+  /api/v1/users:
+    get:
+      tags:
+        - user
+      summary: List Users
+      security:
+        - BearerJwt: []
+      responses:
+        "200":
+          description: The request was successful, and the server has returned the
+            requested resource in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                required:
+                  - users
+        "401":
+          content:
+            application/json:
+              schema:
+                type: object
+                title: ListUsersUnauthorized
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+          description: Authentication is required to access the requested resource. The
+            client must include the appropriate credentials.
+      parameters:
+        - in: query
+          name: count
+          style: form
+          schema:
+            type: number
+          explode: true
+          required: false
+          description: ""
+          allowReserved: false
+        - in: query
+          name: page
+          style: form
+          schema:
+            type: number
+          explode: true
+          required: false
+          description: ""
+          allowReserved: false
+        - in: query
+          name: offset
+          style: form
+          schema:
+            type: number
+          explode: true
+          required: false
+          description: ""
+          allowReserved: false
+        - in: query
+          name: filter
+          style: form
+          schema:
+            type: string
+          explode: true
+          required: false
+          description: ""
+          allowReserved: false
+        - in: query
+          name: desc
+          style: form
+          schema:
+            type: boolean
+          explode: true
+          required: false
+          description: ""
+          allowReserved: false
+      description: List all (or a part of) users
+      operationId: listUsers
+  /api/v1/login/otp:
+    post:
+      tags:
+        - login
+      summary: Send Login OTP
+      responses:
+        "204":
+          $ref: "#/components/responses/No Content"
+        "400":
+          $ref: "#/components/responses/Bad Request"
+        "429":
+          $ref: "#/components/responses/Too Many Requests"
+      parameters: []
+      description: Request to send an OTP to the given phone number
+      operationId: sendLoginOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+              properties:
+                phone:
+                  type: string
+        required: true
+        description: ""
+  /api/v1/users/{phone}:
+    get:
+      tags:
+        - user
+      summary: Get user by phone
+      security:
+        - BearerJwt: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                title: GetUserByPhoneOk
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+          description: The request was successful, and the server has returned the
+            requested resource in the response body.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      parameters:
+        - in: path
+          name: phone
+          schema:
+            type: string
+          required: true
+      description: Find a single user by their phone number
+      operationId: getUserByPhone
+openapi: 3.1.0
+servers:
+  - url: http://127.0.0.1:9009
+    description: ""
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - phone
+        - created_at
+      properties:
+        phone:
+          type: string
+        created_at:
+          type: string
+      description: A registered user
+  responses:
+    Ok:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+      description: The request was successful, and the server has returned the
+        requested resource in the response body.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+      description: The server cannot find the requested resource. The endpoint may be
+        invalid or the resource may no longer exist.
+    Not Found:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+      description: The server cannot find the requested resource. The endpoint may be
+        invalid or the resource may no longer exist.
+    No Content:
+      content:
+        application/json:
+          schema:
+            type: "null"
+      description: The request was successful, but there is no content to return in
+        the response.
+    Bad Request:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+      description: The server could not understand the request due to invalid syntax.
+        The client should modify the request and try again.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+      description: Authentication is required to access the requested resource. The
+        client must include the appropriate credentials.
+    Too Many Requests:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+      description: The user has sent too many requests in a given amount of time.
+        Reduce the request rate and try again later.
+  parameters: {}
+  securitySchemes:
+    BearerJwt:
+      type: http
+      scheme: Bearer
+      description: "Jwt Auth: Authenticated requests contain a valid Json Web Token
+        (JWT) as part of the `Authorization: Bearer <JWT>` header."
+      bearerFormat: Json Web Token (JWT)
