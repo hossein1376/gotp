@@ -3,9 +3,10 @@ package usersrvc
 import (
 	"context"
 	"errors"
-	"time"
+	"fmt"
 
 	"github.com/hossein1376/gotp/pkg/domain/model"
+	"github.com/hossein1376/gotp/pkg/infrastructure/database/usersrp"
 	"github.com/hossein1376/gotp/pkg/tools/errs"
 )
 
@@ -16,13 +17,15 @@ var (
 func (s *UserService) GetByPhone(
 	ctx context.Context, phone string,
 ) (*model.User, error) {
-	createdAt, err := s.db.GetByValueSorted(ctx, s.setKey, phone)
+	user, err := s.repo.UserRepo.FindByPhone(ctx, phone)
 	if err != nil {
-		return nil, errs.NotFound(ErrMissingUser)
+		switch {
+		case errors.Is(err, usersrp.ErrUserNotFound):
+			return nil, errs.NotFound(ErrMissingUser)
+		default:
+			return nil, fmt.Errorf("finding user by phone: %w", err)
+		}
 	}
 
-	return &model.User{
-		Phone:     phone,
-		CreatedAt: time.Unix(int64(createdAt), 0),
-	}, nil
+	return user, nil
 }

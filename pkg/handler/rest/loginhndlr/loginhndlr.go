@@ -33,7 +33,7 @@ func (h LoginHandler) SendLoginOTPHandler(w http.ResponseWriter, r *http.Request
 
 	err = h.loginService.SendLoginOTP(r.Context(), req.Phone)
 	if err != nil {
-		status, resp := serde.ExtractFromErr(err)
+		status, resp := serde.ExtractFromErr(r.Context(), err)
 		serde.WriteJson(w, status, resp, nil)
 		return
 	}
@@ -59,13 +59,13 @@ func (h LoginHandler) LoginViaOTPHandler(w http.ResponseWriter, r *http.Request)
 
 	err = h.loginService.LoginOTP(r.Context(), req.Phone, req.Code)
 	if err != nil {
-		status, resp := serde.ExtractFromErr(err)
+		status, resp := serde.ExtractFromErr(r.Context(), err)
 		serde.WriteJson(w, status, resp, nil)
 		return
 	}
 
 	resp := LoginViaOTPResponse{
-		Token: "", //TODO
+		Token: "", // TODO
 	}
 
 	serde.WriteJson(w, http.StatusCreated, resp, nil)

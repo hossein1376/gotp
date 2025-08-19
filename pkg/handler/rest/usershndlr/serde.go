@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hossein1376/gotp/pkg/domain/model"
+	"github.com/hossein1376/gotp/pkg/handler/rest/serde"
 )
 
 type GetUserByPhoneResponse struct {
@@ -13,34 +14,44 @@ type GetUserByPhoneResponse struct {
 }
 
 type ListUsersResponse struct {
-	Users []model.User `json:"users"`
+	Users []*model.User `json:"users"`
 }
 
 type ListUsersRequest struct {
-	count  int
-	page   int
-	offset int
-	desc   bool
+	count int
+	page  int
+	desc  bool
+	sort  model.UserField
 }
 
 func bindListUsersRequest(r *http.Request) (*ListUsersRequest, error) {
 	query := r.URL.Query()
-	count, err := strconv.Atoi(query.Get("count"))
+
+	count, err := serde.ValueOrDefault(query.Get("count"), strconv.Atoi)
 	if err != nil {
 		return nil, fmt.Errorf("invalid count query: %w", err)
 	}
-	page, err := strconv.Atoi(query.Get("page"))
+	if count < 0 || count > 100 {
+		return nil, fmt.Errorf("invalid count value: %d", count)
+	}
+
+	page, err := serde.ValueOrDefault(query.Get("page"), strconv.Atoi)
 	if err != nil {
 		return nil, fmt.Errorf("invalid page query: %w", err)
 	}
-	offset, err := strconv.Atoi(query.Get("offset"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid offset query: %w", err)
+	if page < 0 {
+		return nil, fmt.Errorf("invalid page value: %d", page)
 	}
-	desc, err := strconv.ParseBool(query.Get("desc"))
+
+	desc, err := serde.ValueOrDefault(query.Get("desc"), strconv.ParseBool)
 	if err != nil {
 		return nil, fmt.Errorf("invalid desc query: %w", err)
 	}
 
-	return &ListUsersRequest{count, page, offset, desc}, nil
+	sort, err := serde.ValueOrDefault(query.Get("sort"), model.ParseUserField)
+	if err != nil {
+		return nil, fmt.Errorf("invalid sort query: %w", err)
+	}
+
+	return &ListUsersRequest{count, page, desc, sort}, nil
 }

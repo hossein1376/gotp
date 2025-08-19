@@ -5,11 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"strconv"
 	"time"
 
 	"github.com/hossein1376/gotp/pkg/domain/model"
+	"github.com/hossein1376/gotp/pkg/tools/slogger"
 )
 
 func (s *LoginService) SendLoginOTP(
@@ -20,18 +22,20 @@ func (s *LoginService) SendLoginOTP(
 		return fmt.Errorf("generate random code: %w", err)
 	}
 
-	otp := &model.OTP{Code: code, CreatedAt: time.Now().Unix()}
+	otp := &model.LoginOTP{
+		Phone: phone, Code: code, CreatedAt: time.Now().Unix(),
+	}
 	data, err := json.Marshal(otp)
 	if err != nil {
 		return fmt.Errorf("marshal otp object: %w", err)
 	}
-	err = s.db.Set(ctx, phone, data, 2*time.Minute)
+	err = s.repo.LoginRepo.SetOTP(ctx, phone, data, 2*time.Minute)
 	if err != nil {
 		return fmt.Errorf("insert otp object: %w", err)
 	}
 
 	// The code should be sent to the user here
-	fmt.Println("OTP code:", code)
+	slogger.Info(ctx, "Sent OTP", slog.String("code", code))
 
 	return nil
 }

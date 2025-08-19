@@ -2,17 +2,14 @@ package loginsrvc
 
 import (
 	"github.com/hossein1376/gotp/pkg/domain"
-	"github.com/hossein1376/gotp/pkg/domain/model"
 )
 
 type LoginService struct {
-	setKey string
-	db     domain.Database
+	repo *domain.Repository
 }
 
-func NewLoginService(db domain.Database) *LoginService {
+func NewLoginService(repo *domain.Repository) *LoginService {
 	return &LoginService{
-		setKey: model.UsersSetKey,
-		db:     db,
+		repo: repo,
 	}
 }

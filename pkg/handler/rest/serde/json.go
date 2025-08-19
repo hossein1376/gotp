@@ -5,35 +5,42 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
+
+	"github.com/hossein1376/gotp/pkg/tools/slogger"
 )
 
 // WriteJson will write back data in json format with the provided status code
 // and headers.
 func WriteJson(
 	w http.ResponseWriter, status int, data any, headers http.Header,
-) error {
+) {
 	for key, value := range headers {
 		w.Header()[key] = value
 	}
 
 	if data == nil {
 		w.WriteHeader(status)
-		return nil
+		return
 	}
 
 	js, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("marshal: %w", err)
+		slog.Error("Marshal data", slog.Any("data", data), slogger.Err("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(status)
 	_, err = w.Write(js)
 	if err != nil {
-		return fmt.Errorf("write response: %w", err)
+		slog.Error("WriteJson", slog.Any("data", data), slogger.Err("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	return nil
+	return
 }
 
 // ReadJson will decode incoming json requests. It will return a human-readable

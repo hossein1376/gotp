@@ -7,8 +7,10 @@ import (
 )
 
 func (s *UserService) ListUsers(
-	ctx context.Context, count int, page int, offset int, desc bool,
-) ([]model.User, error) {
-
-	return nil, nil
+	ctx context.Context, opts model.ListOptions[model.UserField],
+) ([]*model.User, error) {
+	if opts.Count == 0 {
+		opts.Count = 20
+	}
+	return s.repo.UserRepo.ListUsers(ctx, opts)
 }

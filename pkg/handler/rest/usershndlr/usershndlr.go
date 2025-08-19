@@ -26,7 +26,7 @@ func (h UsersHandler) GetUserByPhoneHandler(w http.ResponseWriter, r *http.Reque
 
 	user, err := h.userService.GetByPhone(r.Context(), phone)
 	if err != nil {
-		status, resp := serde.ExtractFromErr(err)
+		status, resp := serde.ExtractFromErr(r.Context(), err)
 		serde.WriteJson(w, status, resp, nil)
 		return
 	}
@@ -45,10 +45,15 @@ func (h UsersHandler) ListAllUsersHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	users, err := h.userService.ListUsers(
-		r.Context(), req.count, req.page, req.offset, req.desc,
+		r.Context(), model.ListOptions[model.UserField]{
+			SortBy: req.sort,
+			Desc:   req.desc,
+			Page:   req.page,
+			Count:  req.count,
+		},
 	)
 	if err != nil {
-		status, resp := serde.ExtractFromErr(err)
+		status, resp := serde.ExtractFromErr(r.Context(), err)
 		serde.WriteJson(w, status, resp, nil)
 		return
 	}

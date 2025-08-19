@@ -12,10 +12,10 @@ type Services struct {
 }
 
 func NewServices(
-	db domain.Database,
+	repo *domain.Repository,
 ) *Services {
 	return &Services{
-		LoginService: loginsrvc.NewLoginService(db),
-		UserService:  usersrvc.NewUserService(db),
+		LoginService: loginsrvc.NewLoginService(repo),
+		UserService:  usersrvc.NewUserService(repo),
 	}
 }

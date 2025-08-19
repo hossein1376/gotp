@@ -2,17 +2,14 @@ package usersrvc
 
 import (
 	"github.com/hossein1376/gotp/pkg/domain"
-	"github.com/hossein1376/gotp/pkg/domain/model"
 )
 
 type UserService struct {
-	setKey string
-	db     domain.Database
+	repo *domain.Repository
 }
 
-func NewUserService(db domain.Database) *UserService {
+func NewUserService(repo *domain.Repository) *UserService {
 	return &UserService{
-		setKey: model.UsersSetKey,
-		db:     db,
+		repo: repo,
 	}
 }
