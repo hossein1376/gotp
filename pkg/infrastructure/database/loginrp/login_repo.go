@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -17,13 +18,20 @@ var (
 )
 
 type LoginRepo struct {
-	client *redis.Client
+	client    *redis.Client
+	rateLimit *redis.Script
 }
 
 var _ domain.LoginRepository = (*LoginRepo)(nil)
 
-func NewLoginRepo(db *cache.DB) *LoginRepo {
-	return &LoginRepo{client: db.Client()}
+func NewLoginRepo(db *cache.DB) (*LoginRepo, error) {
+	insertUserScript, err := os.ReadFile("assets/scripts/rate_limit.lua")
+	if err != nil {
+		return nil, fmt.Errorf("reading insert_user.lua: %w", err)
+	}
+	rateLimit := redis.NewScript(string(insertUserScript))
+
+	return &LoginRepo{client: db.Client(), rateLimit: rateLimit}, nil
 }
 
 func (r *LoginRepo) SetOTP(
@@ -43,4 +51,18 @@ func (r *LoginRepo) GetOTP(ctx context.Context, key string) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+func (r *LoginRepo) IsRateLimited(
+	ctx context.Context, phone string, credit, cost int, window time.Duration,
+) (bool, error) {
+	key := "ratelimit:" + phone
+	isAllowed, err := r.rateLimit.Run(
+		ctx, r.client, []string{key}, credit, cost, window.Milliseconds(),
+	).Int()
+	if err != nil {
+		return false, err
+	}
+
+	return isAllowed == 1, nil
 }

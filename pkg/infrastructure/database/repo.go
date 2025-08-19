@@ -11,12 +11,13 @@ import (
 )
 
 func NewRepo(ctx context.Context, db *cache.DB) (*domain.Repository, error) {
+	lginrp, err := loginrp.NewLoginRepo(db)
+	if err != nil {
+		return nil, fmt.Errorf("new login repo: %w", err)
+	}
 	usrrp, err := usersrp.NewUserRepo(ctx, db)
 	if err != nil {
 		return nil, fmt.Errorf("new users repo: %w", err)
 	}
-	return &domain.Repository{
-		LoginRepo: loginrp.NewLoginRepo(db),
-		UserRepo:  usrrp,
-	}, nil
+	return &domain.Repository{LoginRepo: lginrp, UserRepo: usrrp}, nil
 }

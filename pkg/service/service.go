@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/hossein1376/gotp/pkg/domain"
 	"github.com/hossein1376/gotp/pkg/service/loginsrvc"
 	"github.com/hossein1376/gotp/pkg/service/usersrvc"
@@ -12,10 +14,11 @@ type Services struct {
 }
 
 func NewServices(
-	repo *domain.Repository,
+	repo *domain.Repository, // cfg config.RateLimit
 ) *Services {
 	return &Services{
-		LoginService: loginsrvc.NewLoginService(repo),
+		// Ideally, these vales should come from a config file
+		LoginService: loginsrvc.NewLoginService(repo, 3, 1, 10*time.Second),
 		UserService:  usersrvc.NewUserService(repo),
 	}
 }

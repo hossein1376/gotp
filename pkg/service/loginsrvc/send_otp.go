@@ -11,12 +11,23 @@ import (
 	"time"
 
 	"github.com/hossein1376/gotp/pkg/domain/model"
+	"github.com/hossein1376/gotp/pkg/tools/errs"
 	"github.com/hossein1376/gotp/pkg/tools/slogger"
 )
 
 func (s *LoginService) SendLoginOTP(
 	ctx context.Context, phone string,
 ) error {
+	isAllowed, err := s.repo.LoginRepo.IsRateLimited(
+		ctx, phone, s.rateLimit.credit, s.rateLimit.cost, s.rateLimit.window,
+	)
+	switch {
+	case err != nil:
+		return fmt.Errorf("check for rate limit: %w", err)
+	case !isAllowed:
+		return errs.TooMany(ErrTooManyRequests)
+	}
+
 	code, err := generateRandomCode()
 	if err != nil {
 		return fmt.Errorf("generate random code: %w", err)

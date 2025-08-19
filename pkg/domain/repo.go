@@ -25,4 +25,7 @@ type LoginRepository interface {
 		ctx context.Context, key string, data []byte, expiration time.Duration,
 	) error
 	GetOTP(ctx context.Context, key string) ([]byte, error)
+	IsRateLimited(
+		ctx context.Context, phone string, credit, cost int, window time.Duration,
+	) (bool, error)
 }

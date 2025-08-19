@@ -1,7 +1,7 @@
--- key[1] users prefix key + phone
--- arg[1] phone number
--- arg[2] created at
--- arg[3] last login
+-- KEYS[1] = users prefix key + phone
+-- ARGV[1] = phone number
+-- ARGV[2] = created at
+-- ARGV[3] = last login
 
 local key = KEYS[1]
 local phone = ARGV[1]

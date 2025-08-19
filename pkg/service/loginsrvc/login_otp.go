@@ -12,10 +12,6 @@ import (
 	"github.com/hossein1376/gotp/pkg/tools/errs"
 )
 
-var (
-	ErrNotFound = errors.New("not found")
-)
-
 func (s *LoginService) LoginOTP(ctx context.Context, phone, code string) error {
 	data, err := s.repo.LoginRepo.GetOTP(ctx, phone)
 	if err != nil {

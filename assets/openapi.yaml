@@ -57,19 +57,20 @@ paths:
         - BearerJwt: []
       responses:
         "200":
-          description: The request was successful, and the server has returned the
-            requested resource in the response body.
           content:
             application/json:
               schema:
                 type: object
+                title: ListUsersOk
+                required:
+                  - users
                 properties:
                   users:
                     type: array
                     items:
                       $ref: "#/components/schemas/User"
-                required:
-                  - users
+          description: The request was successful, and the server has returned the
+            requested resource in the response body.
         "401":
           content:
             application/json:
@@ -91,7 +92,7 @@ paths:
             type: number
           explode: true
           required: false
-          description: ""
+          description: Number of items to return. Must be `0 < count < 100`. Default to `20`
           allowReserved: false
         - in: query
           name: page
@@ -100,25 +101,7 @@ paths:
             type: number
           explode: true
           required: false
-          description: ""
-          allowReserved: false
-        - in: query
-          name: offset
-          style: form
-          schema:
-            type: number
-          explode: true
-          required: false
-          description: ""
-          allowReserved: false
-        - in: query
-          name: filter
-          style: form
-          schema:
-            type: string
-          explode: true
-          required: false
-          description: ""
+          description: The page number. Start at 0
           allowReserved: false
         - in: query
           name: desc
@@ -127,7 +110,16 @@ paths:
             type: boolean
           explode: true
           required: false
-          description: ""
+          description: The ascending or descending order. Defaults to `false` (ascending)
+          allowReserved: false
+        - in: query
+          name: sort
+          required: false
+          style: form
+          description: The field to sort by. Defaults to `created_at`
+          explode: true
+          schema:
+            type: string
           allowReserved: false
       description: List all (or a part of) users
       operationId: listUsers
@@ -202,10 +194,13 @@ components:
       required:
         - phone
         - created_at
+        - last_login
       properties:
         phone:
           type: string
         created_at:
+          type: string
+        last_login:
           type: string
       description: A registered user
   responses:
