@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -23,24 +22,31 @@ type config struct {
 func Run() error {
 	ctx := context.Background()
 
-	var cfg config
-	flag.StringVar(&cfg.redisAddr, "cache", "127.0.0.1:6379", "Redis address")
-	flag.StringVar(&cfg.listenAddr, "listen", "127.0.0.1:9009", "Listen address")
-	flag.Parse()
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "0.0.0.0:6379"
+	}
+	listenAddr := os.Getenv("LISTEN_ADDR")
+	if listenAddr == "" {
+		listenAddr = "0.0.0.0:9009"
+	}
 
 	logger := slogger.NewJSONLogger(slog.LevelDebug, os.Stdout)
 	slog.SetDefault(logger)
 
-	db, err := cache.New(ctx, cfg.redisAddr)
+	db, err := cache.New(ctx, redisAddr)
 	if err != nil {
 		return fmt.Errorf("cache.New: %w", err)
 	}
 	defer db.Close()
-	slog.Debug("cache started")
+	slog.Debug("database started")
 
 	repo, err := database.NewRepo(ctx, db)
+	if err != nil {
+		return fmt.Errorf("database.New: %w", err)
+	}
 	services := service.NewServices(repo)
-	srv := rest.NewServer(cfg.listenAddr, services)
+	srv := rest.NewServer(listenAddr, services)
 	slog.Debug("initialized repositories, services and handlers")
 
 	errCh := make(chan error)
@@ -48,7 +54,7 @@ func Run() error {
 	signal.Notify(signalCh, os.Interrupt)
 
 	go func() {
-		slog.Info("starting server", slog.String("addr", cfg.listenAddr))
+		slog.Info("starting server", slog.String("addr", listenAddr))
 		errCh <- srv.ListenAndServe()
 	}()
 

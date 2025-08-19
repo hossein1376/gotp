@@ -14,10 +14,30 @@ func newRouter(srvc *service.Services) *http.ServeMux {
 	lh := loginhndlr.NewLoginHandler(srvc.LoginService)
 	uh := usershndlr.NewUsersHandler(srvc.UserService)
 
-	mux.HandleFunc("POST /api/v1/login/otp", lh.SendLoginOTPHandler)
-	mux.HandleFunc("POST /api/v1/login", lh.LoginViaOTPHandler)
-	mux.HandleFunc("GET /api/v1/users", uh.ListAllUsersHandler)
-	mux.HandleFunc("GET /api/v1/users/{phone}", uh.GetUserByPhoneHandler)
+	mux.Handle(
+		"POST /api/v1/login/otp",
+		applyMiddlewares(http.HandlerFunc(lh.SendLoginOTPHandler)),
+	)
+	mux.Handle(
+		"POST /api/v1/login",
+		applyMiddlewares(http.HandlerFunc(lh.LoginViaOTPHandler)),
+	)
+	mux.Handle(
+		"GET /api/v1/users",
+		applyMiddlewaresAuth(http.HandlerFunc(uh.ListAllUsersHandler)),
+	)
+	mux.Handle(
+		"GET /api/v1/users/{phone}",
+		applyMiddlewaresAuth(http.HandlerFunc(uh.GetUserByPhoneHandler)),
+	)
 
 	return mux
+}
+
+func applyMiddlewares(h http.Handler) http.Handler {
+	return recoverMiddleware(requestIDMiddleware(loggerMiddleware(h)))
+}
+
+func applyMiddlewaresAuth(h http.Handler) http.Handler {
+	return applyMiddlewares(jwtAuthMiddleware(h))
 }

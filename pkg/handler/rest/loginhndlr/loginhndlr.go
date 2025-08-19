@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/hossein1376/gotp/pkg/domain/model"
+	"github.com/hossein1376/gotp/pkg/handler/rest/jwthndlr"
 	"github.com/hossein1376/gotp/pkg/handler/rest/serde"
 	"github.com/hossein1376/gotp/pkg/service/loginsrvc"
 )
@@ -64,9 +65,13 @@ func (h LoginHandler) LoginViaOTPHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp := LoginViaOTPResponse{
-		Token: "", // TODO
+	token, err := jwthndlr.NewJWT()
+	if err != nil {
+		status, resp := serde.ExtractFromErr(r.Context(), err)
+		serde.WriteJson(w, status, resp, nil)
+		return
 	}
+	resp := LoginViaOTPResponse{Token: token}
 
 	serde.WriteJson(w, http.StatusCreated, resp, nil)
 	return
